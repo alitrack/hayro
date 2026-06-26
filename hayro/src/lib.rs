@@ -207,6 +207,51 @@ pub fn render_pdf(
     Some(rendered)
 }
 
+/// Auto-crop white borders from a PNG image, optionally resize to a target width.
+///
+/// Scans for non-white pixels (< 250 in any channel) to find content bounds,
+/// adds 8px padding, crops, and optionally scales to `target_width` (preserving aspect ratio).
+///
+/// Returns the cropped (and optionally resized) image as PNG bytes.
+pub fn auto_crop_png(png_bytes: &[u8], target_width: Option<u32>) -> Vec<u8> {
+    let img = image::load_from_memory(png_bytes).expect("decode png");
+    let rgb = img.to_rgb8();
+    let (w, h) = (rgb.width(), rgb.height());
+
+    let (mut min_x, mut min_y, mut max_x, mut max_y) = (w, h, 0u32, 0u32);
+    for y in 0..h {
+        for x in 0..w {
+            let p = rgb.get_pixel(x, y);
+            if p[0] < 250 || p[1] < 250 || p[2] < 250 {
+                if x < min_x { min_x = x; }
+                if y < min_y { min_y = y; }
+                if x > max_x { max_x = x; }
+                if y > max_y { max_y = y; }
+            }
+        }
+    }
+    let pad = 8u32;
+    min_x = min_x.saturating_sub(pad);
+    min_y = min_y.saturating_sub(pad);
+    max_x = (max_x + pad).min(w - 1);
+    max_y = (max_y + pad).min(h - 1);
+
+    let cropped = image::imageops::crop_imm(&rgb, min_x, min_y, max_x - min_x, max_y - min_y);
+    let mut final_img = image::DynamicImage::ImageRgb8(cropped.to_image());
+
+    if let Some(target_w) = target_width {
+        if final_img.width() > target_w {
+            let ratio = target_w as f64 / final_img.width() as f64;
+            let target_h = (final_img.height() as f64 * ratio) as u32;
+            final_img = final_img.resize_exact(target_w, target_h, image::imageops::FilterType::Lanczos3);
+        }
+    }
+
+    let mut buf = std::io::Cursor::new(Vec::new());
+    final_img.write_to(&mut buf, image::ImageFormat::Png).expect("encode png");
+    buf.into_inner()
+}
+
 pub(crate) fn derive_settings(settings: &vello_cpu::RenderSettings) -> vello_cpu::RenderSettings {
     vello_cpu::RenderSettings {
         num_threads: 0,
