@@ -14,14 +14,15 @@ members = [
     "hayro-ccitt",
     "hayro-fuzz",
     "hayro-postscript",
-    "hayro-cmap"
+    "hayro-cmap",
+    "hayro-cli"
 ]
 
 [workspace.package]
 authors = ["Laurenz Stampfl <laurenz.stampfl@gmail.com>"]
 edition = "2024"
 rust-version = "1.92" # also change in ci.yml
-repository = "https://github.com/LaurenzV/hayro"
+repository = "https://github.com/alitrack/hayro"
 readme = "README.md"
 license = "Apache-2.0 OR MIT"
 
@@ -61,6 +62,7 @@ pic-scale = { version = "0.7.9", default-features = false, features = ["neon", "
 fearless_simd = "0.4.0"
 brotli = { version = "8", default-features = false, features = ["std"] }
 memchr = { version = "2.8.0", default-features = false, features = ["alloc"] }
+clap = { version = "4", features = ["derive"] }
 
 [workspace.lints]
 # This one may vary depending on the project.

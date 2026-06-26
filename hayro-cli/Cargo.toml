@@ -1,0 +1,20 @@
+[package]
+name = "hayro-cli"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+description = "CLI for rendering PDF pages to PNG with auto-crop support"
+
+[[bin]]
+name = "hayro"
+path = "src/main.rs"
+
+[dependencies]
+hayro = { workspace = true }
+hayro-interpret = { workspace = true }
+hayro-syntax = { workspace = true }
+clap = { version = "4", features = ["derive"] }
+image = { workspace = true }
